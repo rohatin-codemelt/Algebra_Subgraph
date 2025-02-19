@@ -12,7 +12,8 @@ import {
   PoolHourData,
   TickDayData,
   FeeHourData,
-  Tick
+  Tick,
+  PoolFiveMinuteData
 } from './../types/schema'
 import { FACTORY_ADDRESS } from './constants'
 import { ethereum, BigInt } from '@graphprotocol/graph-ts'
@@ -292,4 +293,56 @@ export function updateTickDayData(tick: Tick, event: ethereum.Event): TickDayDat
   tickDayData.save()
 
   return tickDayData as TickDayData
+}
+
+export const updatePoolFiveMinuteData = (event: ethereum.Event): PoolFiveMinuteData => {
+  const timestamp = event.block.timestamp.toI32()
+  const quarterHourIndex = timestamp / 300 // 5 minutes = 300 seconds
+  const quarterHourStartUnix = quarterHourIndex * 300
+  const quarterHourPoolID = event.address
+    .toHexString()
+    .concat('-')
+    .concat(quarterHourIndex.toString())
+    
+  const pool = Pool.load(event.address.toHexString())!
+  let pool5MinuteData = PoolFiveMinuteData.load(quarterHourPoolID)
+
+  if (pool5MinuteData === null) {
+    pool5MinuteData = new PoolFiveMinuteData(quarterHourPoolID)
+    pool5MinuteData.periodStartUnix = quarterHourStartUnix
+    pool5MinuteData.pool = pool.id
+    pool5MinuteData.volumeToken0 = ZERO_BD
+    pool5MinuteData.volumeToken1 = ZERO_BD
+    pool5MinuteData.volumeUSD = ZERO_BD
+    pool5MinuteData.untrackedVolumeUSD = ZERO_BD
+    pool5MinuteData.txCount = ZERO_BI
+    pool5MinuteData.feesUSD = ZERO_BD
+    pool5MinuteData.feeGrowthGlobal0X128 = ZERO_BI
+    pool5MinuteData.feeGrowthGlobal1X128 = ZERO_BI
+    pool5MinuteData.open = pool.token0Price
+    pool5MinuteData.high = pool.token0Price
+    pool5MinuteData.low = pool.token0Price
+    pool5MinuteData.close = pool.token0Price
+  }
+
+  if (pool.token0Price.gt(pool5MinuteData.high)) {
+    pool5MinuteData.high = pool.token0Price
+  }
+  if (pool.token0Price.lt(pool5MinuteData.low)) {
+    pool5MinuteData.low = pool.token0Price
+  }
+
+  pool5MinuteData.liquidity = pool.liquidity
+  pool5MinuteData.sqrtPrice = pool.sqrtPrice
+  pool5MinuteData.token0Price = pool.token0Price
+  pool5MinuteData.token1Price = pool.token1Price
+  pool5MinuteData.feeGrowthGlobal0X128 = pool.feeGrowthGlobal0X128
+  pool5MinuteData.feeGrowthGlobal1X128 = pool.feeGrowthGlobal1X128
+  pool5MinuteData.close = pool.token0Price
+  pool5MinuteData.tick = pool.tick
+  pool5MinuteData.tvlUSD = pool.totalValueLockedUSD
+  pool5MinuteData.txCount = pool5MinuteData.txCount.plus(ONE_BI)
+  pool5MinuteData.save()
+
+  return pool5MinuteData as PoolFiveMinuteData
 }

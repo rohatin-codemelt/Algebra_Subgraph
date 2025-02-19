@@ -23,7 +23,8 @@ import {
   updateTokenDayData,
   updateTokenHourData,
   updateAlgebraDayData,
-  updateFeeHourData
+  updateFeeHourData,
+  updatePoolFiveMinuteData
 } from '../utils/intervalUpdates'
 import { createTick } from '../utils/tick'
 
@@ -495,6 +496,8 @@ export function handleSwap(event: SwapEvent): void {
   let token0HourData = updateTokenHourData(token0 as Token, event)
   let token1HourData = updateTokenHourData(token1 as Token, event)
 
+  let pool5MinuteData = updatePoolFiveMinuteData(event)
+
   if(amount0.lt(ZERO_BD)){
     pool.feesToken1 = pool.feesToken1.plus(amount1.times(pool.fee.toBigDecimal()).div(BigDecimal.fromString('1000000')))
     poolDayData.feesToken1 = poolDayData.feesToken1.plus(amount1.times(pool.fee.toBigDecimal()).div(BigDecimal.fromString('1000000')))
@@ -515,6 +518,12 @@ export function handleSwap(event: SwapEvent): void {
   poolDayData.volumeToken0 = poolDayData.volumeToken0.plus(amount0Abs)
   poolDayData.volumeToken1 = poolDayData.volumeToken1.plus(amount1Abs)
   poolDayData.feesUSD = poolDayData.feesUSD.plus(feesUSD)
+
+  pool5MinuteData.untrackedVolumeUSD = pool5MinuteData.untrackedVolumeUSD.plus(amountTotalUSDUntracked)
+  pool5MinuteData.volumeUSD = pool5MinuteData.volumeUSD.plus(amountTotalUSDTracked)
+  pool5MinuteData.volumeToken0 = pool5MinuteData.volumeToken0.plus(amount0Abs)
+  pool5MinuteData.volumeToken1 = pool5MinuteData.volumeToken1.plus(amount1Abs)
+  pool5MinuteData.feesUSD = pool5MinuteData.feesUSD.plus(feesUSD)
 
   
   poolHourData.untrackedVolumeUSD = poolHourData.untrackedVolumeUSD.plus(amountTotalUSDUntracked)
@@ -547,6 +556,7 @@ export function handleSwap(event: SwapEvent): void {
   token0DayData.save()
   token1DayData.save()
   algebraDayData.save()
+  pool5MinuteData.save()
   poolHourData.save()
   poolDayData.save()
   factory.save()

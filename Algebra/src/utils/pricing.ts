@@ -4,16 +4,22 @@ import { Bundle, Pool, Token } from './../types/schema'
 import { BigDecimal, BigInt } from '@graphprotocol/graph-ts'
 import { exponentToBigDecimal, safeDiv } from '../utils/index'
 
-const WMatic_ADDRESS = '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6'
-const USDC_WMatic_03_POOL = '0xb104f0535a35a69880dab51008756c31d47dbf0f'
+const Wzeta_ADDRESS = '0x5f0b1a82749cb4e2278ec87f8bf6b618dc71a8bf'
+const USDC_ETH_WZETA_03_POOL = '0x03a26b2ecb94dc3550bbb03840bb3aee5e5b2761' // USDC.ETH - wzeta
 
 // token where amounts should contribute to tracked volume and liquidity
-// usually tokens that many tokens are paired with s
+// usually tokens that many tokens are paired with other tokens
+//this should work really well since all tokens are either paired with stables or with wzeta
 export let WHITELIST_TOKENS: string[] = [
-  '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6', // WMATIC
-  '0xf2a0bc44debd394076c67962bb4869fd43c78018', // USDC
-  '0x5aefba317baba46eaf98fd6f381d07673bca6467', // USDT 
-  '0x49a390a3dfd2d01389f799965f3af5961f87d228'
+  '0x5f0b1a82749cb4e2278ec87f8bf6b618dc71a8bf', // WZETA
+  '0x91d4f0d54090df2d81e834c3c8ce71c6c865e79f', // USDC.BSC
+  '0xdbfF6471a79E5374d771922F2194eccc42210B9F', // USDT.POL
+  "0x0cbe0df132a6c6b4a2974fa1b7fb953cf0cc798a", // USDC.ETH
+  "0x96152e6180e085fa57c7708e18af8f05e37b479d", // USDC.BASE
+  "0xfc9201f4116ae6b054722e10b98d904829b469c3", // USDC.POL
+  "0x05ba149a7bd6dc1f937fa9046a9e05c05f3b18b0", // USDC.BSC
+  "0x7c8dda80bbbe1254a7aacf3219ebe1481c6e01d7", // USDT.ETH
+  "0x8344d6f84d26f998fa070bbea6d2e15e359e2641", // USDC.SOL
 ]
 
 let MINIMUM_Matic_LOCKED = BigDecimal.fromString('0')
@@ -21,8 +27,14 @@ let MINIMUM_Matic_LOCKED = BigDecimal.fromString('0')
 let Q192 = Math.pow(2, 192)
 
 let STABLE_COINS: string[] = [
-  '0xf2a0bc44debd394076c67962bb4869fd43c78018', // USDC
-  '0x5aefba317baba46eaf98fd6f381d07673bca6467' // SUDT
+  '0x91d4f0d54090df2d81e834c3c8ce71c6c865e79f', // USDC.BSC
+  '0xdbfF6471a79E5374d771922F2194eccc42210B9F', // USDT.POL
+  "0x0cbe0df132a6c6b4a2974fa1b7fb953cf0cc798a", // USDC.ETH
+  "0x96152e6180e085fa57c7708e18af8f05e37b479d", // USDC.BASE
+  "0xfc9201f4116ae6b054722e10b98d904829b469c3", // USDC.POL
+  "0x05ba149a7bd6dc1f937fa9046a9e05c05f3b18b0", // USDC.BSC
+  "0x7c8dda80bbbe1254a7aacf3219ebe1481c6e01d7", // USDT.ETH
+  "0x8344d6f84d26f998fa070bbea6d2e15e359e2641", // USDC.SOL
 ]
 
 
@@ -39,7 +51,7 @@ export function priceToTokenPrices(price: BigInt, token0: Token, token1: Token):
 }
 
 export function getEthPriceInUSD(): BigDecimal {
-  let usdcPool = Pool.load(USDC_WMatic_03_POOL) // dai is token0
+  let usdcPool = Pool.load(USDC_ETH_WZETA_03_POOL) // dai is token0
   if (usdcPool !== null) {
     return usdcPool.token0Price
   } else {
@@ -53,7 +65,7 @@ export function getEthPriceInUSD(): BigDecimal {
  * @todo update to be derived Matic (add stablecoin estimates)
  **/
 export function findEthPerToken(token: Token): BigDecimal {
-  if (token.id == WMatic_ADDRESS) {
+  if (token.id == Wzeta_ADDRESS) {
     return ONE_BD
   }
   let whiteList = token.whitelistPools
